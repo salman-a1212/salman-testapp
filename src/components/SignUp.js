@@ -1,41 +1,62 @@
-import person from "../img/person.jpeg";
 import React, { useState } from "react";
+import { auth, db } from "../config/Firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { collection, addDoc } from "firebase/firestore";
+import person from "../img/person.jpeg";
 import { Link, useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword } from "firebase/auth";
-// import { useAuth } from "./Auth";
-import { auth } from "../config/Firebase";
 
-const SignIn = () => {
+const SignUp = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  // user state for Protected route
-
+  // let userUID;
+  let userData = {};
   const navigator = useNavigate();
 
-  // firebase sign in auth
   const submitForm = (e) => {
     e.preventDefault();
-    signInWithEmailAndPassword(auth, email, password)
+    console.log(name, email, phone, password);
+    createUserWithEmailAndPassword(auth, email, password)
+      // response coming here means promiss resolving here
       .then((userCredential) => {
         // Signed in
         const user = userCredential.user;
-        console.log(user.uid);
-        localStorage.setItem("userUID", user.uid);
-        navigator("/");
+        console.log(user);
+        userData = {
+          name: name,
+          email: email,
+          phone: phone,
+          userUID: user.uid,
+        };
+        console.log(userData);
+        addData();
+
+        navigator("/signin");
         // ...
       })
       .catch((error) => {
         console.log(error);
+        // ..
       });
 
+    setName("");
     setEmail("");
     setPassword("");
+    setPhone("");
   };
+
+  const addData = async () => {
+    const docRef = collection(db, "users");
+    const addUser = await addDoc(docRef, userData);
+    console.log("Document written with ID: ", addUser.id);
+  };
+
   return (
     <div className='App'>
       <div className='container'>
         <p style={{ textAlign: "left" }}>
-          Don't have an account? <Link to='/signup'>Sign Up</Link>
+          Have an account? <Link to='/signin'>Sign in</Link>
         </p>
         <h1>Welcome to AOT</h1>
         <p>
@@ -43,6 +64,22 @@ const SignIn = () => {
           quasi!
         </p>
         <form action='' className='form' onSubmit={submitForm}>
+          <label htmlFor='name'>Name</label>
+          <input
+            type='text'
+            name='Name'
+            id='name'
+            onChange={(e) => setName(e.target.value)}
+            value={name}
+          />
+          <label htmlFor='phone'>Phone</label>
+          <input
+            type='number'
+            name='phone'
+            id='phone'
+            onChange={(e) => setPhone(e.target.value)}
+            value={phone}
+          />
           <label htmlFor='email'>Email</label>
           <input
             type='email'
@@ -54,14 +91,14 @@ const SignIn = () => {
           <label htmlFor='password'>Password</label>
           <input
             type='password'
-            name='password'
-            id='password'
+            name=''
+            id=''
             onChange={(e) => setPassword(e.target.value)}
             value={password}
           />
-          <button type='submit'>Sign In</button>
+          <button type='submit'>Create an account</button>
         </form>
-        <p style={{ textAlign: "center" }}>or signin with</p>
+        <p style={{ textAlign: "center" }}>or signup with</p>
         <div className='btns'>
           <button className='icon'>
             <i className='fab fa-google'></i>
@@ -96,4 +133,4 @@ const SignIn = () => {
   );
 };
 
-export default SignIn;
+export default SignUp;
